@@ -52,24 +52,24 @@ def get_word_contributions(text, model, vectorizer):
     
     return word_scores, model.intercept_
 
-def highlight_text(text, word_scores):
+def highlight_text(text, word_scores, threshold):
     """
     Highlights words in the text based on their contribution scores.
     """
     highlighted_html = ""
     # Use regex to split text while preserving punctuation and spaces
-    tokens = re.findall(r"(\w+|[^\w\s])", text)
+    tokens = re.findall(r"(\w+|[^\w\s])(\s*)", text) # Capture words, punctuation, and trailing spaces
     
-    for token in tokens:
-        word = token.lower()
+    for token, space in tokens:
+        word = token.lower().strip()
         score = word_scores.get(word, 0)
         
-        if score > 0.5: # Strong positive contribution
-            highlighted_html += f'<span style="background-color: #28a745; color: white; padding: 2px 4px; border-radius: 4px;">{token}</span> '
-        elif score < -0.5: # Strong negative contribution
-            highlighted_html += f'<span style="background-color: #dc3545; color: white; padding: 2px 4px; border-radius: 4px;">{token}</span> '
+        if score > threshold: # Strong positive contribution
+            highlighted_html += f'<span style="background-color: #28a745; color: white; padding: 2px 4px; border-radius: 4px;">{token}</span>{space}'
+        elif score < -threshold: # Strong negative contribution
+            highlighted_html += f'<span style="background-color: #dc3545; color: white; padding: 2px 4px; border-radius: 4px;">{token}</span>{space}'
         else:
-            highlighted_html += f"{token} "
+            highlighted_html += f"{token}{space}"
             
     return highlighted_html.strip()
 
@@ -211,10 +211,21 @@ def main_page():
                         st.progress(probabilities[i], text=f"{class_label.capitalize()}: {probabilities[i]:.2%}")
                     
                     st.divider()
-                    st.write("💡 Key Word Contributions:")
+                    
+                    col1, col2 = st.columns([2,1])
+                    with col1:
+                        st.write("💡 **Key Word Contributions**")
+                        st.markdown("""
+                            <small>Words that strongly influenced the prediction.</small><br>
+                            <span style="background-color: #28a745; color: white; padding: 1px 3px; border-radius: 3px;">Positive</span> 
+                            <span style="background-color: #dc3545; color: white; padding: 1px 3px; border-radius: 3px;">Negative</span>
+                        """, unsafe_allow_html=True)
+                    with col2:
+                        threshold = st.slider("Highlight Sensitivity", 0.1, 2.0, 0.5, 0.1, help="Lower values highlight more words.")
+
                     word_scores, _ = get_word_contributions(user_input, model, vectorizer)
-                    highlighted_output = highlight_text(user_input, word_scores)
-                    st.markdown(highlighted_output, unsafe_allow_html=True)
+                    highlighted_output = highlight_text(user_input, word_scores, threshold)
+                    st.markdown(f"<div style='margin-top: 1rem; font-size: 1.1rem;'>{highlighted_output}</div>", unsafe_allow_html=True)
             else:
                 st.warning("⚠️ Please type a comment before analyzing!")
     st.markdown("</div>", unsafe_allow_html=True)
