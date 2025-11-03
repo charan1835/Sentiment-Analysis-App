@@ -47,18 +47,16 @@ def run_bulk_analysis():
     st.markdown("Analyze multiple comments at once by pasting text or uploading a file.")
 
     # Define example bulk text
-    EXAMPLE_BULK_TEXT = """The product quality is outstanding, exceeded my expectations!
-I'm really happy with the purchase, will definitely buy again.
-Customer support was very helpful and resolved my issue quickly.
-The app is intuitive and easy to use. Great job on the UI.
-It's an okay product, does what it says but nothing special.
-The manual was confusing and hard to follow.
-Shipping took much longer than promised.
-The item arrived broken, I am very disappointed.
-This is the worst experience I have ever had with an online store.
-I would not recommend this to anyone.
-The battery life is decent, but not great.
-"""
+    EXAMPLE_BULK_TEXT = """Absolutely love this! It works perfectly and looks great.
+Five stars! The team was incredibly supportive and quick to respond.
+Best purchase I've made all year. Highly recommended!
+The item was delivered on the expected date.
+It functions as described in the product listing.
+This is the third time I've ordered this product.
+Completely disappointed. It stopped working after just one week.
+The customer service was rude and unhelpful.
+Way too expensive for what you get. A total rip-off.
+I was expecting more, but the performance is just average."""
 
     # Load the model and vectorizer
     model, vectorizer = load_model_and_vectorizer()
@@ -104,10 +102,9 @@ The battery life is decent, but not great.
             if hasattr(model, 'predict_proba'):
                 probabilities = model.predict_proba(X)
             else:
-                import numpy as np
                 from utils import softmax
                 decision_scores = model.decision_function(X)
-                probabilities = np.array([softmax(scores) for scores in decision_scores])
+                probabilities = softmax(decision_scores)
 
             confidence_scores = [prob[list(model.classes_).index(pred)] for pred, prob in zip(predictions, probabilities)]
 
