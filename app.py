@@ -1,10 +1,12 @@
 import streamlit as st
 import joblib
 import os
+import numpy as np
+import re
 
 # --- Constants ---
-MODEL_PATH = "sentiment_model.pkl"
-VECTORIZER_PATH = "vectorizer.pkl"
+MODEL_PATH = "sentiment_models.pkl"
+VECTORIZER_PATH = "tfidf_vectorizer.pkl"
 
 # --- Caching and Model Loading ---
 @st.cache_resource
@@ -17,6 +19,59 @@ def load_model_and_vectorizer():
     return model, vectorizer
 
 model, vectorizer = load_model_and_vectorizer()
+
+def _softmax(x):
+    """Compute softmax values for each set of scores in x."""
+    e_x = np.exp(x - np.max(x))
+    return e_x / e_x.sum(axis=0)
+
+
+def get_word_contributions(text, model, vectorizer):
+    """
+    Analyzes the contribution of each word to the sentiment prediction.
+    Returns a dictionary of words and their contribution scores.
+    """
+    if 'positive' not in model.classes_ or 'negative' not in model.classes_:
+        # This handles cases where the model classes are not as expected
+        return {}, None
+
+    # Get the class indices for positive and negative sentiment
+    positive_class_index = list(model.classes_).index('positive')
+    negative_class_index = list(model.classes_).index('negative')
+
+    # Create a mapping from feature index to word
+    feature_names = vectorizer.get_feature_names_out()
+    
+    # Get coefficients for positive and negative classes
+    pos_coeffs = model.coef_[positive_class_index]
+    neg_coeffs = model.coef_[negative_class_index]
+
+    # Create a dictionary mapping words to their influence score
+    # Score = (positive coefficient - negative coefficient)
+    word_scores = {word: pos_coeffs[i] - neg_coeffs[i] for word, i in vectorizer.vocabulary_.items()}
+    
+    return word_scores, model.intercept_
+
+def highlight_text(text, word_scores):
+    """
+    Highlights words in the text based on their contribution scores.
+    """
+    highlighted_html = ""
+    # Use regex to split text while preserving punctuation and spaces
+    tokens = re.findall(r"(\w+|[^\w\s])", text)
+    
+    for token in tokens:
+        word = token.lower()
+        score = word_scores.get(word, 0)
+        
+        if score > 0.5: # Strong positive contribution
+            highlighted_html += f'<span style="background-color: #28a745; color: white; padding: 2px 4px; border-radius: 4px;">{token}</span> '
+        elif score < -0.5: # Strong negative contribution
+            highlighted_html += f'<span style="background-color: #dc3545; color: white; padding: 2px 4px; border-radius: 4px;">{token}</span> '
+        else:
+            highlighted_html += f"{token} "
+            
+    return highlighted_html.strip()
 
 # --- Page Config ---
 st.set_page_config(page_title="Sentiment Analyzer", page_icon="🧠", layout="centered")
@@ -73,6 +128,15 @@ def main_page():
                 margin-top: 1.5rem;
                 border-left: 5px solid #39FF14;
             }
+            .probability-bar-container {
+                display: flex;
+                align-items: center;
+                margin-bottom: 0.5rem;
+            }
+            .probability-label {
+                width: 80px; /* Fixed width for labels */
+                margin-right: 10px;
+            }
         </style>
     """, unsafe_allow_html=True)
 
@@ -80,19 +144,77 @@ def main_page():
     st.title("🧠 Sentiment Analysis App")
     st.subheader("Analyze social media comments with a pre-trained ML model.")
 
+    # --- Example Comments ---
+    st.markdown("<p style='margin-top: 1rem; margin-bottom: 0.5rem;'>👇 Or try one of these examples:</p>", unsafe_allow_html=True)
+    examples = {
+        "Strongly Positive": "This is the best thing I've ever seen! Absolutely amazing. 10/10!",
+        "Positive Service": "The customer service was outstanding and very friendly.",
+        "Neutral": "It does the job. Nothing more, nothing less.",
+        "Mixed/Neutral": "The food was average, but the crew was polite and professional.",
+        "Slightly Negative": "The delivery was a bit late, which was disappointing.",
+        "Strongly Negative": "A terrible product, I would not recommend it to anyone at all."
+    }
+
+    # Initialize session state for text_area if it doesn't exist
+    if 'user_input' not in st.session_state:
+        st.session_state.user_input = ""
+
+    # Display example buttons in a grid layout
+    cols = st.columns(3)
+    example_items = list(examples.items())
+    for i, col in enumerate(cols):
+        with col:
+            if i*2 < len(example_items):
+                label, text = example_items[i*2]
+                if st.button(label, help=text, use_container_width=True):
+                    st.session_state.user_input = text
+            if i*2 + 1 < len(example_items):
+                label, text = example_items[i*2 + 1]
+                if st.button(label, help=text, use_container_width=True):
+                    st.session_state.user_input = text
+
+    st.divider()
+
     if model is None or vectorizer is None:
-        st.error("🔴 **Error:** Model or vectorizer files not found. Please make sure `sentiment_model.pkl` and `vectorizer.pkl` are in the same directory.")
+        st.error("🔴 **Error:** Model or vectorizer files not found. Please make sure `sentiment_models.pkl` and `tfidf_vectorizer.pkl` are in the same directory.")
     else:
-        user_input = st.text_area("💬 Type your comment here:", height=100)
-        if st.button("🔍 Analyze Sentiment"):
+        user_input = st.text_area("💬 Type or select a comment:", height=100, key="user_input")
+        
+        # Action buttons in columns
+        col1, col2 = st.columns([3, 1]) # Give more space to the Analyze button
+        analyze_button = col1.button("🔍 Analyze Sentiment", use_container_width=True)
+        if col2.button("🧹 Clear", use_container_width=True):
+            st.session_state.user_input = ""
+            st.rerun()
+
+        if analyze_button:
             if user_input.strip():
                 X = vectorizer.transform([user_input])
                 prediction = model.predict(X)[0].capitalize()
+                
+                # Use decision_function and softmax as a fallback for predict_proba
+                if hasattr(model, 'predict_proba'):
+                    probabilities = model.predict_proba(X)[0]
+                else:
+                    # For LinearSVC and other models without predict_proba
+                    decision_scores = model.decision_function(X)[0]
+                    probabilities = _softmax(decision_scores)
+
+                
                 emoji_map = {"Positive": "😄", "Neutral": "😐", "Negative": "😞"}
                 emoji = emoji_map.get(prediction, "🤔")
-                st.markdown(f"""<div class="result-box">
-                                <h3>🔹 Sentiment: <strong>{prediction} {emoji}</strong></h3>
-                            </div>""", unsafe_allow_html=True)
+                
+                with st.container(border=True):
+                    st.subheader(f"Predicted Sentiment: {prediction} {emoji}")
+                    st.write("Confidence Scores:")
+                    for i, class_label in enumerate(model.classes_):
+                        st.progress(probabilities[i], text=f"{class_label.capitalize()}: {probabilities[i]:.2%}")
+                    
+                    st.divider()
+                    st.write("💡 Key Word Contributions:")
+                    word_scores, _ = get_word_contributions(user_input, model, vectorizer)
+                    highlighted_output = highlight_text(user_input, word_scores)
+                    st.markdown(highlighted_output, unsafe_allow_html=True)
             else:
                 st.warning("⚠️ Please type a comment before analyzing!")
     st.markdown("</div>", unsafe_allow_html=True)
@@ -100,7 +222,8 @@ def main_page():
 # Define pages for navigation
 pages = [
     st.Page(main_page, title="Sentiment Analyzer", icon="🧠", default=True),
-    st.Page("pages/1_About.py", title="About the App", icon="ℹ️")
+    st.Page("pages/2_Bulk_Analysis.py", title="Bulk Analysis", icon="📂"),
+    st.Page("pages/1_About.py", title="About the App", icon="ℹ️"),
 ]
 
 # Create and run navigation
