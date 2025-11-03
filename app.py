@@ -3,6 +3,7 @@ import joblib
 import os
 import numpy as np
 import re
+from utils import softmax
 
 # --- Constants ---
 MODEL_PATH = "sentiment_models.pkl"
@@ -19,12 +20,6 @@ def load_model_and_vectorizer():
     return model, vectorizer
 
 model, vectorizer = load_model_and_vectorizer()
-
-def _softmax(x):
-    """Compute softmax values for each set of scores in x."""
-    e_x = np.exp(x - np.max(x))
-    return e_x / e_x.sum(axis=0)
-
 
 def get_word_contributions(text, model, vectorizer):
     """
@@ -198,7 +193,7 @@ def main_page():
                 else:
                     # For LinearSVC and other models without predict_proba
                     decision_scores = model.decision_function(X)[0]
-                    probabilities = _softmax(decision_scores)
+                    probabilities = softmax(decision_scores)
 
                 
                 emoji_map = {"Positive": "😄", "Neutral": "😐", "Negative": "😞"}

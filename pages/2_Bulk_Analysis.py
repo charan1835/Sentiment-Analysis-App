@@ -3,6 +3,7 @@ import pandas as pd
 import os
 import sys
 
+
 # Add the parent directory to the path to import the loading function
 # This allows the page to find the `app.py` module
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -45,6 +46,20 @@ def run_bulk_analysis():
     st.title("📂 Bulk Comment Analysis")
     st.markdown("Analyze multiple comments at once by pasting text or uploading a file.")
 
+    # Define example bulk text
+    EXAMPLE_BULK_TEXT = """The product quality is outstanding, exceeded my expectations!
+I'm really happy with the purchase, will definitely buy again.
+Customer support was very helpful and resolved my issue quickly.
+The app is intuitive and easy to use. Great job on the UI.
+It's an okay product, does what it says but nothing special.
+The manual was confusing and hard to follow.
+Shipping took much longer than promised.
+The item arrived broken, I am very disappointed.
+This is the worst experience I have ever had with an online store.
+I would not recommend this to anyone.
+The battery life is decent, but not great.
+"""
+
     # Load the model and vectorizer
     model, vectorizer = load_model_and_vectorizer()
 
@@ -52,21 +67,28 @@ def run_bulk_analysis():
         st.error("🔴 **Error:** Model or vectorizer files not found. Please ensure they are in the root directory.")
         return
 
+    # Initialize session state for bulk text area
+    if 'bulk_user_input' not in st.session_state:
+        st.session_state.bulk_user_input = ""
+
     # --- Input Tabs ---
     tab1, tab2 = st.tabs(["✍️ Paste Text", "📤 Upload File"])
 
     with tab1:
+        st.button("Load Examples", on_click=lambda: st.session_state.update(bulk_user_input=EXAMPLE_BULK_TEXT.strip()))
+        
         input_text = st.text_area(
             "Paste comments here, one per line:",
             height=250,
-            placeholder="This service is amazing!\nThe product arrived damaged.\nIt works as expected."
+            placeholder="This service is amazing!\nThe product arrived damaged.\nIt works as expected.",
+            key="bulk_user_input"
         )
         analyze_button = st.button("📊 Analyze Pasted Text", use_container_width=True)
         if analyze_button and input_text.strip():
             comments = [line.strip() for line in input_text.split('\n') if line.strip()]
         else:
             comments = []
-    
+
     with tab2:
         st.info("File upload functionality is coming soon!", icon="⏳")
         # Placeholder for future file uploader
@@ -82,9 +104,11 @@ def run_bulk_analysis():
             if hasattr(model, 'predict_proba'):
                 probabilities = model.predict_proba(X)
             else:
+                import numpy as np
+                from utils import softmax
                 decision_scores = model.decision_function(X)
-                probabilities = np.array([_softmax(scores) for scores in decision_scores])
-            
+                probabilities = np.array([softmax(scores) for scores in decision_scores])
+
             confidence_scores = [prob[list(model.classes_).index(pred)] for pred, prob in zip(predictions, probabilities)]
 
             # Prepare data for display
