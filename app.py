@@ -4,6 +4,7 @@ import os
 import numpy as np
 import re
 from utils import softmax
+from view_utils import main_page_styles
 
 # --- Constants ---
 MODEL_PATH = "sentiment_models.pkl"
@@ -73,67 +74,8 @@ st.set_page_config(page_title="Sentiment Analyzer", page_icon="🧠", layout="ce
 
 def main_page():
     """Defines the layout and logic for the main Sentiment Analyzer page."""
-    # --- Custom CSS ---
-    st.markdown("""
-        <style>
-            @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-
-            body {
-                background-color: #111111; /* Graphite Black */
-                color: #EAEAEA; /* Light Grey Text */
-                font-family: 'Poppins', sans-serif;
-            }
-            .main {
-                background: #1E1E1E; /* Darker Graphite */
-                padding: 2rem;
-                border-radius: 20px;
-                border: 1px solid #333333;
-                box-shadow: 0px 8px 30px rgba(0,0,0,0.7);
-            }
-            h1 {
-                background: -webkit-linear-gradient(45deg, #39FF14, #23a6d5); /* Mint to Blue */
-                -webkit-background-clip: text;
-                -webkit-text-fill-color: transparent;
-                font-size: 2.5rem !important;
-                font-weight: 700;
-            }
-            .stTextArea textarea {
-                background-color: #2C2C2C !important;
-                color: #EAEAEA !important;
-                border-radius: 10px;
-                border: 1px solid #444444;
-            }
-            .stButton button {
-                background: linear-gradient(90deg, #39FF14, #00b39f); /* Mint Green Gradient */
-                color: white;
-                border-radius: 10px;
-                padding: 0.6rem 1.5rem;
-                font-weight: 600;
-                border: none;
-                transition: 0.3s;
-            }
-            .stButton button:hover {
-                transform: scale(1.05);
-                box-shadow: 0px 4px 20px rgba(57, 255, 20, 0.3);
-            }
-            .result-box {
-                background-color: rgba(44, 44, 44, 0.6);
-                padding: 1rem;
-                border-radius: 10px;
-                margin-top: 1.5rem;
-                border-left: 5px solid #39FF14;
-            }
-            .probability-bar-container {
-                display: flex;
-                align-items: center;
-                margin-bottom: 0.5rem;
-            }
-            .probability-label {
-                width: 80px; /* Fixed width for labels */
-                margin-right: 10px;
-            }
-        </style>
-    """, unsafe_allow_html=True)
+    # Apply shared styles
+    main_page_styles()
 
     st.markdown("<div class='main'>", unsafe_allow_html=True)
     st.title("🧠 Sentiment Analysis App")

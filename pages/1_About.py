@@ -1,12 +1,8 @@
 import streamlit as st
-import os
-import sys
-
-# Add the parent directory to the path to import the styling function
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # Import the shared styling function
-from app import main_page_styles
+# This now imports from a separate utility file, which is a more robust pattern
+from view_utils import main_page_styles
 
 # --- Page Config ---
 st.set_page_config(page_title="About", page_icon="ℹ️", layout="centered")
