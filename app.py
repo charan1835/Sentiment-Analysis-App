@@ -7,8 +7,8 @@ from utils import softmax
 from view_utils import main_page_styles
 
 # --- Constants ---
-MODEL_PATH = "sentiment_models.pkl"
-VECTORIZER_PATH = "tfidf_vectorizer.pkl"
+MODEL_PATH = "sentiment_models(2).pkl"
+VECTORIZER_PATH = "tfidf_vectorizer(1).pkl"
 
 # --- Caching and Model Loading ---
 @st.cache_resource
