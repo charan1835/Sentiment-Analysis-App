@@ -6,19 +6,28 @@ import re
 from utils import softmax
 from view_utils import main_page_styles
 
+# --- Project Root Directory ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
 # --- Constants ---
-MODEL_PATH = "sentiment_models(2).pkl"
-VECTORIZER_PATH = "tfidf_vectorizer(1).pkl"
+MODEL_PATH = os.path.join(BASE_DIR, "sentiment_models.pkl")
+VECTORIZER_PATH = os.path.join(BASE_DIR, "tfidf_vectorizer.pkl")
 
 # --- Caching and Model Loading ---
 @st.cache_resource
 def load_model_and_vectorizer():
     """Load the sentiment model and vectorizer from disk."""
-    if not os.path.exists(MODEL_PATH) or not os.path.exists(VECTORIZER_PATH):
+    try:
+        if not os.path.exists(MODEL_PATH) or not os.path.exists(VECTORIZER_PATH):
+            return None, None
+            
+        model = joblib.load(MODEL_PATH)
+        vectorizer = joblib.load(VECTORIZER_PATH)
+        return model, vectorizer
+        
+    except Exception as e:
+        st.error("Error loading the sentiment analysis model. Please ensure all model files are in the correct location.")
         return None, None
-    model = joblib.load(MODEL_PATH)
-    vectorizer = joblib.load(VECTORIZER_PATH)
-    return model, vectorizer
 
 model, vectorizer = load_model_and_vectorizer()
 
@@ -86,7 +95,7 @@ def main_page():
     examples = {
         "Strongly Positive": "This is the best thing I've ever seen! Absolutely amazing. 10/10!",
         "Positive Service": "The customer service was outstanding and very friendly.",
-        "Neutral": "It does the job. Nothing more, nothing less.",
+        "Neutral": "It does the job. Nothing more or less.",
         "Mixed/Neutral": "The food was average, but the crew was polite and professional.",
         "Slightly Negative": "The delivery was a bit late, which was disappointing.",
         "Strongly Negative": "A terrible product, I would not recommend it to anyone at all."
