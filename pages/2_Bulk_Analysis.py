@@ -23,19 +23,19 @@ def convert_df_to_csv(df):
 
 def style_sentiment(sentiment):
     """Applies color to the sentiment text for better visualization."""
-    if sentiment == "Positive":
-        return "background-color: #28a745; color: white" # Green
-    elif sentiment == "Negative":
-        return "background-color: #dc3545; color: white" # Red
-    else:
-        return "background-color: #ffc107; color: black" # Yellow/Amber
+    if sentiment == "Positive": # Teal
+        return "background-color: #14B8A6; color: white"
+    elif sentiment == "Negative": # Red
+        return "background-color: #F43F5E; color: white"
+    else: # Amber
+        return "background-color: #F59E0B; color: black"
 
 def run_bulk_analysis():
     """Defines the layout and logic for the Bulk Analysis page."""
     # Consistent styling with the main app
     st.markdown("""
         <style>
-            .stButton button {
+            .stButton > button {
                 background: linear-gradient(90deg, #39FF14, #00b39f);
                 color: white;
                 border: none;
@@ -143,7 +143,7 @@ I was expecting more, but the performance is just average."""
                 st.dataframe(
                     results_df.style.applymap(style_sentiment, subset=['Sentiment'])
                                     .format({"Confidence": "{:.2%}"})
-                                    .bar(subset=["Confidence"], color='#39FF14', vmin=0, vmax=1),
+                                    .bar(subset=["Confidence"], color='#14B8A6', vmin=0, vmax=1),
                     use_container_width=True,
                     height=400
                 )

@@ -90,34 +90,34 @@ def main_page():
     st.title("🧠 Sentiment Analysis App")
     st.subheader("Analyze social media comments with a pre-trained ML model.")
 
-    # --- Example Comments ---
-    st.markdown("<p style='margin-top: 1rem; margin-bottom: 0.5rem;'>👇 Or try one of these examples:</p>", unsafe_allow_html=True)
-    examples = {
-        "Strongly Positive": "This is the best thing I've ever seen! Absolutely amazing. 10/10!",
-        "Positive Service": "The customer service was outstanding and very friendly.",
-        "Neutral": "It does the job. Nothing more or less.",
-        "Mixed/Neutral": "The food was average, but the crew was polite and professional.",
-        "Slightly Negative": "The delivery was a bit late, which was disappointing.",
-        "Strongly Negative": "A terrible product, I would not recommend it to anyone at all."
-    }
-
     # Initialize session state for text_area if it doesn't exist
     if 'user_input' not in st.session_state:
         st.session_state.user_input = ""
 
-    # Display example buttons in a grid layout
-    cols = st.columns(3)
-    example_items = list(examples.items())
-    for i, col in enumerate(cols):
-        with col:
-            if i*2 < len(example_items):
-                label, text = example_items[i*2]
-                if st.button(label, help=text, use_container_width=True):
-                    st.session_state.user_input = text
-            if i*2 + 1 < len(example_items):
-                label, text = example_items[i*2 + 1]
-                if st.button(label, help=text, use_container_width=True):
-                    st.session_state.user_input = text
+    # --- Example Comments in an Expander ---
+    with st.expander("👇 Try an example"):
+        examples = {
+            "Strongly Positive": "This is the best thing I've ever seen! Absolutely amazing. 10/10!",
+            "Positive Service": "The customer service was outstanding and very friendly.",
+            "Neutral": "It does the job. Nothing more or less.",
+            "Mixed/Neutral": "The food was average, but the crew was polite and professional.",
+            "Slightly Negative": "The delivery was a bit late, which was disappointing.",
+            "Strongly Negative": "A terrible product, I would not recommend it to anyone at all."
+        }
+
+        # Display example buttons in a grid layout
+        cols = st.columns(3)
+        example_items = list(examples.items())
+        for i, col in enumerate(cols):
+            with col:
+                if i*2 < len(example_items):
+                    label, text = example_items[i*2]
+                    if st.button(label, help=text, use_container_width=True):
+                        st.session_state.user_input = text
+                if i*2 + 1 < len(example_items):
+                    label, text = example_items[i*2 + 1]
+                    if st.button(label, help=text, use_container_width=True):
+                        st.session_state.user_input = text
 
     st.divider()
 

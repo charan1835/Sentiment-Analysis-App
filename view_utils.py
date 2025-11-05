@@ -6,43 +6,50 @@ def main_page_styles():
         <style>
             @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
 
+            /* --- Base & Fonts (High-Contrast Dark Theme) --- */
             body {
-                background-color: #111111; /* Graphite Black */
-                color: #EAEAEA; /* Light Grey Text */
+                background-color: #111827; /* Dark Charcoal */
+                color: #F9FAFB; /* Off-White */
                 font-family: 'Poppins', sans-serif;
             }
+
+            /* --- Main Container --- */
             .main {
-                background: #1E1E1E; /* Darker Graphite */
+                background: #1F2937; /* Lighter Charcoal */
                 padding: 2rem;
                 border-radius: 20px;
-                border: 1px solid #333333;
-                box-shadow: 0px 8px 30px rgba(0,0,0,0.7);
+                border: 1px solid #374151; /* Subtle Border */
+                box-shadow: 0px 8px 30px rgba(0,0,0,0.2);
             }
+
+            /* --- Headers & Text --- */
             h1 {
-                background: -webkit-linear-gradient(45deg, #39FF14, #23a6d5); /* Mint to Blue */
+                background: -webkit-linear-gradient(45deg, #2DD4BF, #38BDF8); /* Teal to Cyan Gradient */
                 -webkit-background-clip: text;
                 -webkit-text-fill-color: transparent;
                 font-size: 2.5rem !important;
                 font-weight: 700;
             }
+
+            /* --- Widgets (Text Area & Buttons) --- */
             .stTextArea textarea {
-                background-color: #2C2C2C !important;
-                color: #EAEAEA !important;
+                background-color: #111827 !important;
+                color: #F9FAFB !important;
                 border-radius: 10px;
-                border: 1px solid #444444;
+                border: 1px solid #374151;
             }
             .stButton button {
-                background: linear-gradient(90deg, #39FF14, #00b39f); /* Mint Green Gradient */
+                background: linear-gradient(90deg, #14B8A6, #0EA5E9); /* Teal to Blue Gradient */
                 color: white;
                 border-radius: 10px;
                 padding: 0.6rem 1.5rem;
                 font-weight: 600;
                 border: none;
-                transition: 0.3s;
+                transition: all 0.3s ease;
             }
             .stButton button:hover {
                 transform: scale(1.05);
-                box-shadow: 0px 4px 20px rgba(57, 255, 20, 0.3);
+                box-shadow: 0px 4px 25px rgba(20, 184, 166, 0.4); /* Teal Glow */
             }
         </style>
     """, unsafe_allow_html=True)
