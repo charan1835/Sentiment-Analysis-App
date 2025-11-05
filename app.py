@@ -69,10 +69,10 @@ def highlight_text(text, word_scores, threshold):
         word = token.lower().strip()
         score = word_scores.get(word, 0)
         
-        if score > threshold: # Strong positive contribution
-            highlighted_html += f'<span style="background-color: #28a745; color: white; padding: 2px 4px; border-radius: 4px;">{token}</span>{space}'
-        elif score < -threshold: # Strong negative contribution
-            highlighted_html += f'<span style="background-color: #dc3545; color: white; padding: 2px 4px; border-radius: 4px;">{token}</span>{space}'
+        if score > threshold: # Strong positive contribution (Teal)
+            highlighted_html += f'<span style="background-color: #14B8A6; color: white; padding: 2px 4px; border-radius: 4px;">{token}</span>{space}'
+        elif score < -threshold: # Strong negative contribution (Rose Red)
+            highlighted_html += f'<span style="background-color: #F43F5E; color: white; padding: 2px 4px; border-radius: 4px;">{token}</span>{space}'
         else:
             highlighted_html += f"{token}{space}"
             
@@ -150,21 +150,31 @@ def main_page():
                 emoji_map = {"Positive": "😄", "Neutral": "😐", "Negative": "😞"}
                 emoji = emoji_map.get(prediction, "🤔")
                 
+                # --- Display Results with Contextual Feedback ---
                 with st.container(border=True):
-                    st.subheader(f"Predicted Sentiment: {prediction} {emoji}")
+                    if prediction == "Positive":
+                        st.subheader(f"Predicted Sentiment: Positive {emoji}")
+                        st.success("This comment reflects positive sentiment, indicating favorable feedback.", icon="✅")
+                    elif prediction == "Negative":
+                        st.subheader(f"Predicted Sentiment: Negative {emoji}")
+                        st.warning("This comment conveys negative sentiment. This may highlight an area for review or improvement.", icon="⚠️")
+                    else: # Neutral
+                        st.subheader(f"Predicted Sentiment: Neutral {emoji}")
+                        st.info("This comment is classified as neutral, likely representing a factual statement or objective feedback.", icon="✍️")
+
                     st.write("Confidence Scores:")
                     for i, class_label in enumerate(model.classes_):
                         st.progress(probabilities[i], text=f"{class_label.capitalize()}: {probabilities[i]:.2%}")
                     
                     st.divider()
                     
-                    col1, col2 = st.columns([2,1])
+                    col1, col2 = st.columns([2, 1])
                     with col1:
                         st.write("💡 **Key Word Contributions**")
                         st.markdown("""
-                            <small>Words that strongly influenced the prediction.</small><br>
-                            <span style="background-color: #28a745; color: white; padding: 1px 3px; border-radius: 3px;">Positive</span> 
-                            <span style="background-color: #dc3545; color: white; padding: 1px 3px; border-radius: 3px;">Negative</span>
+                            <small>Words that influenced the prediction.</small><br>
+                            <span style="background-color: #14B8A6; color: white; padding: 1px 3px; border-radius: 3px;">Positive</span> 
+                            <span style="background-color: #F43F5E; color: white; padding: 1px 3px; border-radius: 3px;">Negative</span>
                         """, unsafe_allow_html=True)
                     with col2:
                         threshold = st.slider("Highlight Sensitivity", 0.1, 2.0, 0.5, 0.1, help="Lower values highlight more words.")
