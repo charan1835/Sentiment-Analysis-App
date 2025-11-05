@@ -62,7 +62,7 @@ I was expecting more, but the performance is just average."""
     model, vectorizer = load_model_and_vectorizer()
 
     if model is None or vectorizer is None:
-        st.error("🔴 **Error:** Model or vectorizer files not found. Please ensure they are in the root directory.")
+        st.error("🔴 **Error:** Model or vectorizer files not found. Please make sure `sentiment_models.pkl` and `tfidf_vectorizer.pkl` are in the project's root directory.")
         return
 
     # Initialize session state for bulk text area
