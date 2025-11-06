@@ -123,33 +123,22 @@ Files in current directory:
         
         st.stop()  # Stop execution if model isn't loaded
 
+    # Initialize session state for bulk text area
+    if 'bulk_user_input' not in st.session_state:
+        st.session_state.bulk_user_input = ""
+
     # --- Input Tabs ---
     tab1, tab2 = st.tabs(["✍️ Paste Text", "📤 Upload File"])
 
     with tab1:
-        # Initialize session state with a unique key for this session
-        session_key = f"bulk_input_{id(tab1)}"
-        if session_key not in st.session_state:
-            st.session_state[session_key] = ""
-            
-        # Load examples button with unique key
-        if st.button("Load Examples", key="load_examples_btn"):
-            st.session_state[session_key] = EXAMPLE_BULK_TEXT.strip()
-            st.rerun()
+        st.button("Load Examples", on_click=lambda: st.session_state.update(bulk_user_input=EXAMPLE_BULK_TEXT.strip()))
         
-        # Text area with unique key
         input_text = st.text_area(
             "Paste comments here, one per line:",
-            value=st.session_state.get(session_key, ""),
             height=250,
             placeholder="This service is amazing!\nThe product arrived damaged.\nIt works as expected.",
-            key=f"{session_key}_textarea"
+            key="bulk_user_input"
         )
-        
-        # Update session state if text changes
-        if input_text != st.session_state.get(session_key, ""):
-            st.session_state[session_key] = input_text
-            st.rerun()
         analyze_button = st.button("📊 Analyze Pasted Text", use_container_width=True)
         if analyze_button and input_text.strip():
             comments = [line.strip() for line in input_text.split('\n') if line.strip()]
@@ -211,10 +200,10 @@ Files in current directory:
             with col2:
                 st.markdown("<h6>Detailed Results</h6>", unsafe_allow_html=True)
                 st.dataframe(
-                    results_df.style.map(style_sentiment, subset=['Sentiment'])
-                                  .format({"Confidence": "{:.2%}"})
-                                  .bar(subset=["Confidence"], color='#14B8A6', vmin=0, vmax=1),
-                    width='stretch',
+                    results_df.style.applymap(style_sentiment, subset=['Sentiment'])
+                                    .format({"Confidence": "{:.2%}"})
+                                    .bar(subset=["Confidence"], color='#14B8A6', vmin=0, vmax=1),
+                    use_container_width=True,
                     height=400
                 )
     elif analyze_button and not input_text.strip():
