@@ -7,7 +7,6 @@ from utils import softmax
 from view_utils import main_page_styles
 
 # --- Project Root Directory ---
-import traceback
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # --- Constants ---
@@ -19,60 +18,31 @@ VECTORIZER_FILENAME = "tfidf_vectorizer.pkl"
 def load_model_and_vectorizer():
     """Load the sentiment model and vectorizer from disk."""
     try:
-        # Debug information
-        st.sidebar.write("Debug Info:")
-        st.sidebar.write(f"Current directory: {os.getcwd()}")
-        st.sidebar.write(f"Base directory: {BASE_DIR}")
-        st.sidebar.write(f"Files in base directory: {os.listdir(BASE_DIR)}")
-        
-        # Check for model files in multiple locations
-        possible_paths = [
-            (BASE_DIR, "Current directory"),
-            (os.path.join(BASE_DIR, '..'), "Parent directory"),
-            (os.getcwd(), "Working directory")
-        ]
-        
+        # Try to find the model and vectorizer files in the current directory or parent directory
         model_path = None
         vectorizer_path = None
         
-        for path, desc in possible_paths:
-            model_candidate = os.path.join(path, MODEL_FILENAME)
-            vectorizer_candidate = os.path.join(path, VECTORIZER_FILENAME)
+        # Check in current directory
+        if os.path.isfile(os.path.join(BASE_DIR, MODEL_FILENAME)) and os.path.isfile(os.path.join(BASE_DIR, VECTORIZER_FILENAME)):
+            model_path = os.path.join(BASE_DIR, MODEL_FILENAME)
+            vectorizer_path = os.path.join(BASE_DIR, VECTORIZER_FILENAME)
+        # Check in parent directory (for Streamlit Cloud deployment)
+        elif os.path.isfile(os.path.join(os.path.dirname(BASE_DIR), MODEL_FILENAME)) and \
+             os.path.isfile(os.path.join(os.path.dirname(BASE_DIR), VECTORIZER_FILENAME)):
+            model_path = os.path.join(os.path.dirname(BASE_DIR), MODEL_FILENAME)
+            vectorizer_path = os.path.join(os.path.dirname(BASE_DIR), VECTORIZER_FILENAME)
+        else:
+            st.error(f"Model or vectorizer files not found. Please make sure {MODEL_FILENAME} and {VECTORIZER_FILENAME} are in the project's root directory.")
+            st.error(f"Current directory: {os.getcwd()}")
+            st.error(f"Files in current directory: {os.listdir('.')}")
+            return None, None
             
-            if os.path.isfile(model_candidate) and os.path.isfile(vectorizer_candidate):
-                model_path = model_candidate
-                vectorizer_path = vectorizer_candidate
-                st.sidebar.success(f"Found model files in {desc}: {path}")
-                break
+        model = joblib.load(model_path)
+        vectorizer = joblib.load(vectorizer_path)
+        return model, vectorizer
         
-        if not model_path or not vectorizer_path:
-            error_msg = [
-                "❌ Model files not found in any of these locations:",
-                *[f"- {path} ({desc})" for path, desc in possible_paths],
-                "\nPlease ensure both files exist in one of these locations:",
-                f"- {MODEL_FILENAME}",
-                f"- {VECTORIZER_FILENAME}",
-                f"\nCurrent working directory: {os.getcwd()}",
-                f"Files present: {os.listdir('.')}"
-            ]
-            st.error("\n".join(error_msg))
-            return None, None
-            
-        # Try to load the files
-        try:
-            model = joblib.load(model_path)
-            vectorizer = joblib.load(vectorizer_path)
-            st.sidebar.success("✅ Successfully loaded model and vectorizer")
-            return model, vectorizer
-        except Exception as load_error:
-            st.error(f"❌ Error loading model files: {str(load_error)}")
-            st.error(f"Model file size: {os.path.getsize(model_path) if os.path.exists(model_path) else 0} bytes")
-            st.error(f"Vectorizer file size: {os.path.getsize(vectorizer_path) if os.path.exists(vectorizer_path) else 0} bytes")
-            return None, None
-            
     except Exception as e:
-        st.error(f"❌ Unexpected error in load_model_and_vectorizer: {str(e)}")
-        st.error(f"Traceback: {traceback.format_exc()}")
+        st.error(f"Error loading the sentiment analysis model: {str(e)}")
         return None, None
 
 model, vectorizer = load_model_and_vectorizer()
