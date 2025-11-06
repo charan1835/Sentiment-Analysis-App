@@ -155,6 +155,7 @@ def main_page():
                     if prediction == "Positive":
                         st.subheader(f"Predicted Sentiment: Positive {emoji}")
                         st.success("This comment reflects positive sentiment, indicating favorable feedback.", icon="✅")
+                        st.balloons()
                     elif prediction == "Negative":
                         st.subheader(f"Predicted Sentiment: Negative {emoji}")
                         st.warning("This comment conveys negative sentiment. This may highlight an area for review or improvement.", icon="⚠️")
