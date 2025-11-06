@@ -4,34 +4,46 @@ import os
 import sys
 import joblib
 
-# Add the parent directory to the path to import the loading function
-# This allows the page to find the `app.py` module
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# --- Project Root Directory (Match app.py logic) ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Try to import the loading function from the main app
-try:
-    from app import load_model_and_vectorizer
-    MODEL_LOADED = True
-except ImportError as e:
-    st.error(f"Error importing from app.py: {str(e)}")
-    MODEL_LOADED = False
+# --- Constants ---
+MODEL_FILENAME = "sentiment_models.pkl"
+VECTORIZER_FILENAME = "tfidf_vectorizer.pkl"
 
 # Define model and vectorizer at module level
 model = None
 vectorizer = None
+MODEL_LOADED = False
 
-# Try to load model and vectorizer if not already loaded
-if MODEL_LOADED:
-    model, vectorizer = load_model_and_vectorizer()
-    if model is None or vectorizer is None:
-        MODEL_LOADED = False
-        st.error("⚠️ Failed to load model or vectorizer. Some features may not be available.")
+# --- Load Model and Vectorizer (Using same logic as app.py) ---
+try:
+    model_path = None
+    vectorizer_path = None
+    
+    # Check in parent directory first (pages folder is subdirectory)
+    parent_dir = os.path.dirname(BASE_DIR)
+    if os.path.isfile(os.path.join(parent_dir, MODEL_FILENAME)) and \
+       os.path.isfile(os.path.join(parent_dir, VECTORIZER_FILENAME)):
+        model_path = os.path.join(parent_dir, MODEL_FILENAME)
+        vectorizer_path = os.path.join(parent_dir, VECTORIZER_FILENAME)
+    # Check in current directory
+    elif os.path.isfile(os.path.join(BASE_DIR, MODEL_FILENAME)) and \
+         os.path.isfile(os.path.join(BASE_DIR, VECTORIZER_FILENAME)):
+        model_path = os.path.join(BASE_DIR, MODEL_FILENAME)
+        vectorizer_path = os.path.join(BASE_DIR, VECTORIZER_FILENAME)
+    
+    if model_path and vectorizer_path:
+        model = joblib.load(model_path)
+        vectorizer = joblib.load(vectorizer_path)
+        MODEL_LOADED = True
+    else:
+        st.error(f"⚠️ Model files not found in expected locations.")
+        
+except Exception as e:
+    st.error(f"❌ Error loading models: {str(e)}")
 
 # --- Helper Functions ---
-@st.cache_data
-def process_bulk_text(comments, model, vectorizer):
-    """Processes a list of comments and returns a results DataFrame."""
-
 @st.cache_data
 def convert_df_to_csv(df):
     """Converts a DataFrame to a CSV string for downloading."""
@@ -84,6 +96,31 @@ I was expecting more, but the performance is just average."""
         2. The files are not corrupted
         3. You have the necessary permissions to read these files
         """)
+        
+        # Show debug information
+        with st.expander("🔍 Debug Information"):
+            parent_dir = os.path.dirname(BASE_DIR)
+            st.code(f"""
+Current File Location: {BASE_DIR}
+Parent Directory (Project Root): {parent_dir}
+
+Checking Parent Directory:
+- Model path: {os.path.join(parent_dir, MODEL_FILENAME)}
+- Model exists: {os.path.exists(os.path.join(parent_dir, MODEL_FILENAME))}
+- Vectorizer path: {os.path.join(parent_dir, VECTORIZER_FILENAME)}
+- Vectorizer exists: {os.path.exists(os.path.join(parent_dir, VECTORIZER_FILENAME))}
+
+Files in parent directory:
+{os.listdir(parent_dir) if os.path.exists(parent_dir) else 'Directory not accessible'}
+
+Checking Current Directory:
+- Model path: {os.path.join(BASE_DIR, MODEL_FILENAME)}
+- Model exists: {os.path.exists(os.path.join(BASE_DIR, MODEL_FILENAME))}
+
+Files in current directory:
+{os.listdir(BASE_DIR) if os.path.exists(BASE_DIR) else 'Directory not accessible'}
+            """)
+        
         st.stop()  # Stop execution if model isn't loaded
 
     # Initialize session state for bulk text area
@@ -119,10 +156,11 @@ I was expecting more, but the performance is just average."""
             X = vectorizer.transform(comments)
             predictions = model.predict(X)
             
-            # Get confidence scores
+            # Get confidence scores (match app.py logic)
             if hasattr(model, 'predict_proba'):
                 probabilities = model.predict_proba(X)
             else:
+                # For LinearSVC and other models without predict_proba
                 from utils import softmax
                 decision_scores = model.decision_function(X)
                 probabilities = softmax(decision_scores)
@@ -171,7 +209,5 @@ I was expecting more, but the performance is just average."""
     elif analyze_button and not input_text.strip():
         st.warning("⚠️ The text area is empty. Please paste some comments.")
 
-# This check ensures the code runs only when this script is executed directly
-# or by Streamlit's page navigation.
-if __name__ == "__main__":
-    run_bulk_analysis()
+# Run the analysis
+run_bulk_analysis()
