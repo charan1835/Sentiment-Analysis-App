@@ -2,14 +2,30 @@ import streamlit as st
 import pandas as pd
 import os
 import sys
-
+import joblib
 
 # Add the parent directory to the path to import the loading function
 # This allows the page to find the `app.py` module
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-# Import the cached model loading function from the main app
-from app import load_model_and_vectorizer
+# Try to import the loading function from the main app
+try:
+    from app import load_model_and_vectorizer
+    MODEL_LOADED = True
+except ImportError as e:
+    st.error(f"Error importing from app.py: {str(e)}")
+    MODEL_LOADED = False
+
+# Define model and vectorizer at module level
+model = None
+vectorizer = None
+
+# Try to load model and vectorizer if not already loaded
+if MODEL_LOADED:
+    model, vectorizer = load_model_and_vectorizer()
+    if model is None or vectorizer is None:
+        MODEL_LOADED = False
+        st.error("⚠️ Failed to load model or vectorizer. Some features may not be available.")
 
 # --- Helper Functions ---
 @st.cache_data
@@ -58,12 +74,17 @@ The customer service was rude and unhelpful.
 Way too expensive for what you get. A total rip-off.
 I was expecting more, but the performance is just average."""
 
-    # Load the model and vectorizer
-    model, vectorizer = load_model_and_vectorizer()
-
-    if model is None or vectorizer is None:
-        st.error("🔴 **Error:** Model or vectorizer files not found. Please make sure `sentiment_models.pkl` and `tfidf_vectorizer.pkl` are in the project's root directory.")
-        return
+    # Check if model and vectorizer are loaded
+    if not MODEL_LOADED or model is None or vectorizer is None:
+        st.error("""
+        🔴 **Error:** Failed to load the sentiment analysis model.
+        
+        Please ensure that:
+        1. `sentiment_models.pkl` and `tfidf_vectorizer.pkl` exist in the project's root directory
+        2. The files are not corrupted
+        3. You have the necessary permissions to read these files
+        """)
+        st.stop()  # Stop execution if model isn't loaded
 
     # Initialize session state for bulk text area
     if 'bulk_user_input' not in st.session_state:
