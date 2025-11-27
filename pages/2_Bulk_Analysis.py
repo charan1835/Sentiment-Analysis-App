@@ -180,13 +180,16 @@ Files in current directory:
             st.divider()
             st.subheader("📊 Analysis Summary")
 
-            col1, col2 = st.columns([1.5, 2.5])
-
+            # Top Section: Chart and Download
+            col1, col2 = st.columns([2, 1])
             with col1:
                 st.markdown("<h6>Sentiment Distribution</h6>", unsafe_allow_html=True)
                 sentiment_counts = results_df['Sentiment'].value_counts()
                 st.bar_chart(sentiment_counts)
 
+            with col2:
+                st.write("") # Spacer
+                st.write("")
                 # Prepare CSV for download
                 csv = convert_df_to_csv(results_df)
                 st.download_button(
@@ -197,15 +200,17 @@ Files in current directory:
                    use_container_width=True
                 )
 
-            with col2:
-                st.markdown("<h6>Detailed Results</h6>", unsafe_allow_html=True)
-                st.dataframe(
-                    results_df.style.applymap(style_sentiment, subset=['Sentiment'])
-                                    .format({"Confidence": "{:.2%}"})
-                                    .bar(subset=["Confidence"], color='#14B8A6', vmin=0, vmax=1),
-                    use_container_width=True,
-                    height=400
-                )
+            st.divider()
+
+            # Bottom Section: Detailed Results
+            st.markdown("<h6>Detailed Results</h6>", unsafe_allow_html=True)
+            st.dataframe(
+                results_df.style.applymap(style_sentiment, subset=['Sentiment'])
+                                .format({"Confidence": "{:.2%}"})
+                                .bar(subset=["Confidence"], color='#14B8A6', vmin=0, vmax=1),
+                use_container_width=True,
+                height=600
+            )
     elif analyze_button and not input_text.strip():
         st.warning("⚠️ The text area is empty. Please paste some comments.")
 

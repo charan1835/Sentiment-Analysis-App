@@ -145,9 +145,11 @@ def main_page():
         # Action buttons in columns
         col1, col2 = st.columns([3, 1]) # Give more space to the Analyze button
         analyze_button = col1.button("🔍 Analyze Sentiment", use_container_width=True)
-        if col2.button("🧹 Clear", use_container_width=True):
+        def clear_input():
             st.session_state.user_input = ""
             st.rerun()
+
+        col2.button("🧹 Clear", use_container_width=True, on_click=clear_input)
 
         if analyze_button:
             if user_input.strip():
