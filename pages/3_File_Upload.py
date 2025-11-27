@@ -2,8 +2,9 @@ import streamlit as st
 import pandas as pd
 import os
 import joblib
-from view_utils import main_page_styles
+from view_utils import main_page_styles, generate_wordcloud_plot, show_history_sidebar
 import matplotlib.pyplot as plt
+from utils import add_to_history
 
 # --- Project Root Directory ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -122,6 +123,11 @@ def run_file_upload_analysis():
                     "Emoji": [emoji_map.get(p.capitalize(), "🤔") for p in predictions]
                 }
                 results_df = pd.DataFrame(results_data)
+                
+                # Add summary to history
+                sentiment_counts = results_df['Sentiment'].value_counts()
+                top_sentiment = sentiment_counts.idxmax()
+                add_to_history(f"File Upload ({len(comments)} items)", top_sentiment)
 
                 st.divider()
                 st.subheader("📊 Analysis Summary")
@@ -130,7 +136,6 @@ def run_file_upload_analysis():
                 col1, col2 = st.columns([2, 1])
                 with col1:
                     st.markdown("<h6>Sentiment Distribution</h6>", unsafe_allow_html=True)
-                    sentiment_counts = results_df['Sentiment'].value_counts()
                     
                     # Create Pie Chart using Matplotlib
                     fig, ax = plt.subplots(figsize=(6, 6))
@@ -165,6 +170,16 @@ def run_file_upload_analysis():
                        mime='text/csv',
                        use_container_width=True
                     )
+                
+                # Word Cloud Section
+                st.divider()
+                st.subheader("☁️ Word Cloud")
+                with st.spinner("Generating Word Cloud..."):
+                    fig = generate_wordcloud_plot(comments)
+                    if fig:
+                        st.pyplot(fig)
+                    else:
+                        st.info("Not enough text to generate a word cloud.")
 
                 st.divider()
 
@@ -180,6 +195,9 @@ def run_file_upload_analysis():
 
         except Exception as e:
             st.error(f"Error processing file: {str(e)}")
+            
+    # Show history sidebar
+    show_history_sidebar()
 
 # Run the analysis
 run_file_upload_analysis()

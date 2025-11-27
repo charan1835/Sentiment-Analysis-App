@@ -3,6 +3,8 @@ import pandas as pd
 import os
 import sys
 import joblib
+from view_utils import main_page_styles, generate_wordcloud_plot, show_history_sidebar
+from utils import add_to_history
 
 # --- Project Root Directory (Match app.py logic) ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -72,7 +74,7 @@ def run_bulk_analysis():
     """, unsafe_allow_html=True)
 
     st.title("📂 Bulk Comment Analysis")
-    st.markdown("Analyze multiple comments at once by pasting text or uploading a file.")
+    st.markdown("Analyze multiple comments at once by pasting text.")
 
     # Define example bulk text
     EXAMPLE_BULK_TEXT = """Absolutely love this! It works perfectly and looks great.
@@ -167,6 +169,11 @@ Files in current directory:
                 "Emoji": [emoji_map.get(p.capitalize(), "🤔") for p in predictions]
             }
             results_df = pd.DataFrame(results_data)
+            
+            # Add summary to history
+            sentiment_counts = results_df['Sentiment'].value_counts()
+            top_sentiment = sentiment_counts.idxmax()
+            add_to_history(f"Bulk Analysis ({len(comments)} items)", top_sentiment)
 
             st.divider()
             st.subheader("📊 Analysis Summary")
@@ -175,7 +182,6 @@ Files in current directory:
             col1, col2 = st.columns([2, 1])
             with col1:
                 st.markdown("<h6>Sentiment Distribution</h6>", unsafe_allow_html=True)
-                sentiment_counts = results_df['Sentiment'].value_counts()
                 st.bar_chart(sentiment_counts)
 
             with col2:
@@ -190,6 +196,16 @@ Files in current directory:
                    mime='text/csv',
                    use_container_width=True
                 )
+            
+            # Word Cloud Section
+            st.divider()
+            st.subheader("☁️ Word Cloud")
+            with st.spinner("Generating Word Cloud..."):
+                fig = generate_wordcloud_plot(comments)
+                if fig:
+                    st.pyplot(fig)
+                else:
+                    st.info("Not enough text to generate a word cloud.")
 
             st.divider()
 
@@ -204,6 +220,9 @@ Files in current directory:
             )
     elif analyze_button and not input_text.strip():
         st.warning("⚠️ The text area is empty. Please paste some comments.")
+    
+    # Show history sidebar
+    show_history_sidebar()
 
 # Run the analysis
 run_bulk_analysis()

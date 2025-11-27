@@ -3,8 +3,8 @@ import joblib
 import os
 import numpy as np
 import re
-from utils import softmax
-from view_utils import main_page_styles
+from utils import softmax, add_to_history
+from view_utils import main_page_styles, show_history_sidebar
 
 # --- Project Root Directory ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -168,6 +168,9 @@ def main_page():
                 emoji_map = {"Positive": "😄", "Neutral": "😐", "Negative": "😞"}
                 emoji = emoji_map.get(prediction, "🤔")
                 
+                # Add to history
+                add_to_history(user_input, prediction)
+                
                 # --- Display Results with Contextual Feedback ---
                 with st.container(border=True):
                     if prediction == "Positive":
@@ -204,6 +207,9 @@ def main_page():
             else:
                 st.warning("⚠️ Please type a comment before analyzing!")
     st.markdown("</div>", unsafe_allow_html=True)
+    
+    # Show history sidebar
+    show_history_sidebar()
 
 # Define pages for navigation
 pages = [

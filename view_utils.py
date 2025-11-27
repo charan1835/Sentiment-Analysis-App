@@ -1,4 +1,6 @@
 import streamlit as st
+from wordcloud import WordCloud
+import matplotlib.pyplot as plt
 
 def main_page_styles():
     """Injects custom CSS for the app for a consistent look and feel."""
@@ -53,3 +55,37 @@ def main_page_styles():
             }
         </style>
     """, unsafe_allow_html=True)
+
+def generate_wordcloud_plot(text_data):
+    """Generates a word cloud plot from a list of text."""
+    if not text_data:
+        return None
+        
+    text = " ".join(text_data)
+    # Use a font compatible with the dark theme or just standard
+    wordcloud = WordCloud(width=800, height=400, background_color='#1F2937', colormap='viridis').generate(text)
+    
+    fig, ax = plt.subplots(figsize=(10, 5))
+    # Set figure background to match app theme
+    fig.patch.set_facecolor('#1F2937')
+    ax.imshow(wordcloud, interpolation='bilinear')
+    ax.axis("off")
+    return fig
+
+def show_history_sidebar():
+    """Displays the analysis history in the sidebar."""
+    with st.sidebar:
+        st.header("🕒 History")
+        if 'history' not in st.session_state or not st.session_state.history:
+            st.info("No analysis history yet.")
+        else:
+            for item in st.session_state.history:
+                emoji = "😐"
+                if item['sentiment'] == "Positive":
+                    emoji = "😄"
+                elif item['sentiment'] == "Negative":
+                    emoji = "😞"
+                
+                st.markdown(f"**{item['time']}** {emoji} {item['sentiment']}")
+                st.caption(f"{item['text']}")
+                st.divider()
