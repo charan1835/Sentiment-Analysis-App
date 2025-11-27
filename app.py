@@ -209,6 +209,7 @@ def main_page():
 pages = [
     st.Page(main_page, title="Sentiment Analyzer", icon="🧠", default=True),
     st.Page("pages/2_Bulk_Analysis.py", title="Bulk Analysis", icon="📂"),
+    st.Page("pages/3_File_Upload.py", title="File Upload Analysis", icon="📤"),
     st.Page("pages/1_About.py", title="About the App", icon="ℹ️"),
 ]
 

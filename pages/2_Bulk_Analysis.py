@@ -127,28 +127,19 @@ Files in current directory:
     if 'bulk_user_input' not in st.session_state:
         st.session_state.bulk_user_input = ""
 
-    # --- Input Tabs ---
-    tab1, tab2 = st.tabs(["✍️ Paste Text", "📤 Upload File"])
-
-    with tab1:
-        st.button("Load Examples", on_click=lambda: st.session_state.update(bulk_user_input=EXAMPLE_BULK_TEXT.strip()))
-        
-        input_text = st.text_area(
-            "Paste comments here, one per line:",
-            height=250,
-            placeholder="This service is amazing!\nThe product arrived damaged.\nIt works as expected.",
-            key="bulk_user_input"
-        )
-        analyze_button = st.button("📊 Analyze Pasted Text", use_container_width=True)
-        if analyze_button and input_text.strip():
-            comments = [line.strip() for line in input_text.split('\n') if line.strip()]
-        else:
-            comments = []
-
-    with tab2:
-        st.info("File upload functionality is coming soon!", icon="⏳")
-        # Placeholder for future file uploader
-        st.file_uploader("Upload a .txt or .csv file", type=['txt', 'csv'], disabled=True)
+    st.button("Load Examples", on_click=lambda: st.session_state.update(bulk_user_input=EXAMPLE_BULK_TEXT.strip()))
+    
+    input_text = st.text_area(
+        "Paste comments here, one per line:",
+        height=250,
+        placeholder="This service is amazing!\nThe product arrived damaged.\nIt works as expected.",
+        key="bulk_user_input"
+    )
+    analyze_button = st.button("📊 Analyze Pasted Text", use_container_width=True)
+    if analyze_button and input_text.strip():
+        comments = [line.strip() for line in input_text.split('\n') if line.strip()]
+    else:
+        comments = []
 
     if comments:
         with st.spinner(f"Analyzing {len(comments)} comments..."):
