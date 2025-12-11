@@ -10,8 +10,8 @@ from utils import add_to_history
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # --- Constants ---
-MODEL_FILENAME = "sentiment_models.pkl"
-VECTORIZER_FILENAME = "tfidf_vectorizer.pkl"
+MODEL_FILENAME = "sentiment_model (2).pkl"
+VECTORIZER_FILENAME = "tfidf_vectorizer (1).pkl"
 
 # Define model and vectorizer at module level
 model = None

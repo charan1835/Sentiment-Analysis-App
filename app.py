@@ -10,8 +10,8 @@ from view_utils import main_page_styles, show_history_sidebar
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # --- Constants ---
-MODEL_FILENAME = "sentiment_models.pkl"
-VECTORIZER_FILENAME = "tfidf_vectorizer.pkl"
+MODEL_FILENAME = "sentiment_model (2).pkl"
+VECTORIZER_FILENAME = "tfidf_vectorizer (1).pkl"
 
 # --- Caching and Model Loading ---
 @st.cache_resource
@@ -113,7 +113,7 @@ def main_page():
     # --- Example Comments in an Expander ---
     with st.expander("👇 Try an example"):
         examples = {
-            "Strongly Positive": "This is the best thing I've ever seen! Absolutely amazing. 10/10!",
+            "Strongly Positive": "This is the best thing I've ever seen! Absolutely amazing.",
             "Positive Service": "The customer service was outstanding and very friendly.",
             "Neutral": "It does the job. Nothing more or less.",
             "Mixed/Neutral": "The food was average, but the crew was polite and professional.",
